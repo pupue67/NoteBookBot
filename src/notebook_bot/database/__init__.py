@@ -1,2 +1,1 @@
-"""Future Microsoft SQL Server adapter package."""
-
+"""Reserved for the database developer. See docs/DATABASE_TASK.md."""

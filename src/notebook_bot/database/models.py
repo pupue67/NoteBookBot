@@ -1,2 +1,1 @@
-"""Future SQLAlchemy ORM mappings for Microsoft SQL Server tables."""
-
+"""TODO (database developer): ORM models mapped to notebook_bot.models contracts."""

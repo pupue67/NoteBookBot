@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [{
+    "name": "Notebook: Telegram bot",
+    "type": "debugpy",
+    "request": "launch",
+    "module": "notebook_bot.main",
+    "cwd": "${workspaceFolder}",
+    "envFile": "${workspaceFolder}/.env",
+    "console": "integratedTerminal"
+  }]
+}

@@ -1,2 +1,1 @@
-"""Notebook Telegram bot package."""
-
+"""Notebook booking bot."""

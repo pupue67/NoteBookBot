@@ -1,27 +1,24 @@
-"""Shared validation rules required by Telegram forms."""
-
-from datetime import date
+### Правила ввода: проверка текста, чисел, времени, интервалов и дат с понятными ошибками для пользователя.
+from datetime import datetime
 
 from ..models import Interval
 
 
 class RuleError(Exception):
-    pass
+    """Safe, user-facing business rule failure."""
 
 
-def text(value, limit=1000):
+def text(value, maximum=500):
     value = str(value).strip()
-    if not value:
-        raise RuleError("Значение не может быть пустым.")
-    if len(value) > limit:
-        raise RuleError(f"Допустимо не более {limit} символов.")
+    if not value or len(value) > maximum:
+        raise RuleError(f"Введите текст от 1 до {maximum} символов.")
     return value
 
 
-def number(value, minimum=0, maximum=1_000_000):
+def number(value, minimum=0, maximum=1000000):
     try:
-        result = int(value)
-    except (TypeError, ValueError):
+        result = int(str(value).strip())
+    except ValueError:
         raise RuleError("Введите целое число.") from None
     if not minimum <= result <= maximum:
         raise RuleError(f"Введите число от {minimum} до {maximum}.")
@@ -30,35 +27,41 @@ def number(value, minimum=0, maximum=1_000_000):
 
 def minute(value):
     try:
-        hour, minute_value = map(int, str(value).strip().split(":"))
-    except (TypeError, ValueError):
-        raise RuleError("Введите время в формате ЧЧ:ММ.") from None
-    result = hour * 60 + minute_value
-    if hour not in range(25) or minute_value not in range(60) or result > 1440:
-        raise RuleError("Введите корректное время.")
-    return result
+        h, m = map(int, value.strip().split(":"))
+        if h == 24 and m == 0:
+            return 1440
+        if not (0 <= h < 24 and 0 <= m < 60):
+            raise ValueError
+        return h * 60 + m
+    except ValueError:
+        raise RuleError("Введите время в формате ЧЧ:ММ, например 15:30.") from None
+
+
+def hhmm(value):
+    return f"{value // 60:02}:{value % 60:02}"
 
 
 def intervals(value):
+    if value.strip() == "-":
+        return []
     result = []
-    for part in str(value).replace(";", ",").split(","):
+    for part in value.replace("–", "-").replace("—", "-").split(","):
         try:
             start, end = part.strip().split("-")
         except ValueError:
-            raise RuleError("Введите интервалы, например: 10:00-13:00, 15:00-20:00.") from None
+            raise RuleError("Пример: 10:00-13:00, 15:00-20:00. Выходной: -") from None
         item = Interval(start=minute(start), end=minute(end))
         if item.start >= item.end:
-            raise RuleError("Начало интервала должно быть раньше окончания.")
+            raise RuleError("Начало интервала должно быть раньше конца, в пределах одного дня.")
         result.append(item)
-    ordered = sorted(result, key=lambda item: item.start)
-    if any(left.end > right.start for left, right in zip(ordered, ordered[1:])):
-        raise RuleError("Рабочие интервалы не должны пересекаться.")
-    return ordered
+    result.sort(key=lambda x: x.start)
+    if any(a.end > b.start for a, b in zip(result, result[1:])):
+        raise RuleError("Интервалы не должны пересекаться.")
+    return result
 
 
 def local_date(value):
     try:
-        return date.fromisoformat(str(value).strip())
+        return datetime.strptime(value.strip(), "%d.%m.%Y").date()
     except ValueError:
-        raise RuleError("Введите дату в формате ГГГГ-ММ-ДД.") from None
-
+        raise RuleError("Введите дату ДД.ММ.ГГГГ, например 16.09.2026.") from None
