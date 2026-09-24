@@ -36,3 +36,23 @@ async def test_only_owner_can_change_calendar_and_range_is_bounded(setup_app):
 
     with pytest.raises(RuleError):
         await show_month(Event(), app, master.id, business.id, 2026, 8)
+
+
+async def test_month_screen_has_day_grid_and_selected_cutoff(setup_app):
+    app, master, _, _, business, _, _ = setup_app
+    await app.set_booking_until(master.id, business.id, date(2026, 9, 24))
+
+    class Event:
+        async def answer(self, text, **kwargs):
+            self.text = text
+            self.markup = kwargs["reply_markup"]
+
+    event = Event()
+    await show_month(event, app, master.id, business.id, 2026, 9)
+    assert "24.09.2026" in event.text
+    assert all(len(row) == 7 for row in event.markup.inline_keyboard[:6])
+    assert any(
+        button.callback_data == f"hend:{business.id}:2026-09-24" and "✓" in button.text
+        for row in event.markup.inline_keyboard
+        for button in row
+    )
