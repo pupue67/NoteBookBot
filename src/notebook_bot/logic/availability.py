@@ -1,4 +1,4 @@
-### Рассчитывает свободные даты и время для записи с учётом расписания и занятых слотов.
+"""Рассчитывает свободные даты и время для записи с учётом расписания и занятых слотов."""
 from datetime import datetime, time, timedelta
 from ..models import Appointment, DateOverride, DayRule, PersonalDuration, TimeNote
 
@@ -41,7 +41,11 @@ async def available_times(
 ):
     if not existing and (not business.accepts_new or not service.active):
         return []
-    if day < now.date() or day > now.date() + timedelta(days=business.horizon_days):
+    if (
+        day < now.date()
+        or day > now.date() + timedelta(days=business.horizon_days)
+        or (business.booking_until is not None and day > business.booking_until)
+    ):
         return []
     work, closed, limit, _, _ = await effective_day(tx, business, day)
     appointments = [

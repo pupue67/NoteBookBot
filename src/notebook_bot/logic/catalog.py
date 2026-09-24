@@ -1,4 +1,4 @@
-### Логика работы с бизнесами, услугами, расписанием, клиентами и доступным временем для записи.
+"""Логика работы с бизнесами, услугами, расписанием, клиентами и доступным временем для записи."""
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -107,6 +107,23 @@ class Catalog:
             setattr(b, field, value)
             await tx.put(b)
             return b
+
+    async def set_booking_until(self, actor, business_id, last_day):
+        today = self.clock().date()
+        async with self.repo.transaction() as tx:
+            business = await self.owner(tx, actor, business_id)
+            if last_day is not None and not today <= last_day <= today + timedelta(days=180):
+                raise RuleError("Выберите дату от сегодня до 180 дней вперёд.")
+            if last_day is not None:
+                if business.booking_until is None:
+                    business.horizon_before_calendar = business.horizon_days
+                business.horizon_days = max(1, (last_day - today).days)
+            else:
+                business.horizon_days = business.horizon_before_calendar or 30
+                business.horizon_before_calendar = None
+            business.booking_until = last_day
+            await tx.put(business)
+            return business
 
     async def services(self, business_id, actor=None):
         async with self.repo.transaction() as tx:
@@ -274,6 +291,8 @@ class Catalog:
                 client_id, duration = a.client_id, a.required_duration or a.duration_min
             first = max(start_day or self.clock().date(), self.clock().date())
             last = self.clock().date() + timedelta(days=b.horizon_days)
+            if b.booking_until is not None:
+                last = min(last, b.booking_until)
             result = []
             for offset in range((last - first).days + 1):
                 day = first + timedelta(days=offset)

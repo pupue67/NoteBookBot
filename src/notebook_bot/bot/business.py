@@ -1,4 +1,4 @@
-### Профиль бизнеса:создание и просмотр, настройки записи, клиентская ссылка, избранные специалисты и навигация по разделам бизнеса
+"""Профиль бизнеса:создание и просмотр, настройки записи, клиентская ссылка, избранные специалисты и навигация по разделам бизнеса"""
 from aiogram import F, Router
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
@@ -171,6 +171,7 @@ async def settings(callback, app, actor):
         "Настройки\n\n" + "\n".join(f"{label}: {getattr(b, key) or '—'}" for key, label in FIELDS.items()),
         one(
             *[(label, f"setting:{id}:{key}") for key, label in FIELDS.items()],
+            ("Выбрать последнюю дату на календаре", f"horizon:{id}"),
             ("Расширенные настройки", f"advanced:{id}"),
             HOME,
         ),

@@ -1,4 +1,4 @@
-### Точка запуска приложения.
+"""Точка запуска приложения."""
 import asyncio
 import contextlib
 import logging
@@ -10,7 +10,7 @@ from aiogram import Bot, Dispatcher, F, Router
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.fsm.storage.memory import MemoryStorage, SimpleEventIsolation
 
-from .bot import appointments, booking, business, schedule, services
+from .bot import appointments, booking, business, calendar, schedule, services
 from .bot.common import ContextMiddleware, HOME, forms_router, one, send
 from .bot.notifications import worker
 from .config import Settings
@@ -78,6 +78,7 @@ def build_dispatcher(app):
     dp.include_router(menu.router)
     dp.include_router(services.router)
     dp.include_router(schedule.router)
+    dp.include_router(calendar.router)
     dp.include_router(booking.router)
     dp.include_router(appointments.router)
     dp.include_router(forms_router)

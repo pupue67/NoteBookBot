@@ -1,4 +1,4 @@
-### Логика записей: создание, отмена и перенос записей, длительность, предоплата, завершение визита и напоминания.
+"""Логика записей: создание, отмена и перенос записей, длительность, предоплата, завершение визита и напоминания."""
 from datetime import timedelta
 from ..models import Appointment, Business, Client, History, PersonalDuration, Service
 from .availability import available_times, duration_for, occupies, visit_context

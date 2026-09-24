@@ -1,4 +1,4 @@
-### Интерфейс расписания: рабочая неделя, интервалы, лимиты, исключения дат, закрытые промежутки, комментарии, адреса и проверка конфликтов
+"""Интерфейс расписания: рабочая неделя, интервалы, лимиты, исключения дат, закрытые промежутки, комментарии, адреса и проверка конфликтов"""
 from datetime import date
 
 from aiogram import F, Router
@@ -27,7 +27,11 @@ async def week(callback, app, actor):
             f"{name}: {render_intervals(rules[i].intervals) if i in rules else 'Выходной'}"
             for i, name in enumerate(DAYS)
         ),
-        one(*[(name, f"dayrule:{id}:w{i}") for i, name in enumerate(DAYS)], HOME),
+        one(
+            *[(name, f"dayrule:{id}:w{i}") for i, name in enumerate(DAYS)],
+            ("Последняя дата записи", f"horizon:{id}"),
+            HOME,
+        ),
     )
 
 
